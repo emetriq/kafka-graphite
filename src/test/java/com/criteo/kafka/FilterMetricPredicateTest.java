@@ -36,6 +36,9 @@ import com.yammer.metrics.core.Metric;
 import com.yammer.metrics.core.MetricName;
 import com.yammer.metrics.core.MetricPredicate;
 
+import kafka.common.AppInfo;
+import scala.collection.immutable.Map$;
+
 public class FilterMetricPredicateTest {
 
     private Metric metricMock;
@@ -58,9 +61,19 @@ public class FilterMetricPredicateTest {
 
     @Test
     public void alwaysExcludeAppVersion_NoRegEx() {
+        Gauge gauge = AppInfo.newGauge("Version", new Gauge() {
+            @Override
+            public Object value() {
+                return "0.8.2.2";
+            }
+        }, Map$.MODULE$.<String, String>empty());
+
+        assertEquals("There should only be the AppInfo Version gauge", 1, Metrics.defaultRegistry().allMetrics().keySet().size());
+        MetricName versionMetricName = Metrics.defaultRegistry().allMetrics().keySet().iterator().next();
+
         MetricPredicate predicate = new FilterMetricPredicate();
 
-        assertFalse(predicate.matches(new MetricName("kafka.common", "AppInfo", "Version", null, "mBeanName"), metricMock));
+        assertFalse(predicate.matches(versionMetricName, gauge));
         assertTrue(predicate.matches(new MetricName("kafka.common", "AppInfo", "SomethingElse", null, "mBeanName"), metricMock));
     }
 
@@ -68,8 +81,8 @@ public class FilterMetricPredicateTest {
     public void alwaysExcludeAppVersion_WithRegEx() {
         MetricPredicate predicate = new FilterMetricPredicate("group.type.foobar.*");
 
-        assertFalse(predicate.matches(new MetricName("kafka.common", "AppInfo", "Version", null, "mBeanName"), metricMock));
-        assertTrue(predicate.matches(new MetricName("kafka.common", "AppInfo", "SomethingElse", null, "mBeanName"), metricMock));
+        assertFalse(predicate.matches(new MetricName("kafka.common", "AppInfo", "Version", null, "kafka.common:type=AppInfo,name=Version"), metricMock));
+        assertTrue(predicate.matches(new MetricName("kafka.common", "AppInfo", "SomethingElse", null, "kafka.common:type=AppInfo,name=Version"), metricMock));
      }
 
     @Test
