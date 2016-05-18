@@ -18,26 +18,25 @@
 
 package com.criteo.kafka;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Gauge;
 import com.yammer.metrics.core.Metric;
 import com.yammer.metrics.core.MetricName;
 import com.yammer.metrics.core.MetricPredicate;
-
 import kafka.common.AppInfo;
+import org.junit.Before;
+import org.junit.Test;
 import scala.collection.immutable.Map$;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 public class FilterMetricPredicateTest {
 
@@ -133,6 +132,42 @@ public class FilterMetricPredicateTest {
 
         assertTrue("The gauge should be there", Metrics.defaultRegistry().allMetrics().containsKey(metricName));
         assertEquals(Metrics.defaultRegistry().allMetrics().get(metricName), gauge);
+    }
+
+
+    @Test
+    public void doNotReportInvalidGauges() {
+        MetricPredicate predicate = new FilterMetricPredicate();
+
+        MetricName metricName = new MetricName("test", "test", "delete", "scope", "mBeanName");
+        Metric nullStringGauge = new Gauge<String>() {
+            @Override public String value() {
+                return null;
+            }
+        };
+
+        Metric stringGauge = new Gauge<String>() {
+            @Override public String value() {
+                return "anyVal";
+            }
+        };
+
+        Metric intGauge = new Gauge<Integer>() {
+            @Override public Integer value() {
+                return 1;
+            }
+        };
+
+        Metric bigIntGauge = new Gauge<BigInteger>() {
+            @Override public BigInteger value() {
+                return new BigInteger("100");
+            }
+        };
+
+        assertFalse( predicate.matches(metricName, nullStringGauge));
+        assertFalse( predicate.matches(metricName, stringGauge));
+        assertTrue( predicate.matches(metricName, intGauge));
+        assertTrue( predicate.matches(metricName, bigIntGauge));
     }
 
     @Test

@@ -59,7 +59,9 @@ public class ValidatingMetricProcessor implements MetricProcessor {
     @Override
     public void processGauge(MetricName name, Gauge gauge, Object context) throws Exception {
         try {
-            gauge.value();
+            if (!(gauge.value() instanceof Number)) {
+                throw new InvalidGaugeValueException(gauge.value() + " is not a valid value for graphite!");
+            }
         } catch (NoSuchElementException ex) {
             throw new InvalidGaugeException(String.format("%s.%s.%s", name.getGroup(), name.getType(), name.getName()), ex);
         }

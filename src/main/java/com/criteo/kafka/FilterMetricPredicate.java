@@ -18,16 +18,15 @@
 
 package com.criteo.kafka;
 
-import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.yammer.metrics.Metrics;
 import com.yammer.metrics.core.Metric;
 import com.yammer.metrics.core.MetricName;
 import com.yammer.metrics.core.MetricPredicate;
 import com.yammer.metrics.core.MetricProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.regex.Pattern;
 
 /**
  * Implementation of {@link MetricPredicate} which will <b>exclude<b/> metrics if they match
@@ -89,7 +88,11 @@ class FilterMetricPredicate implements MetricPredicate {
             LOGGER.info("Deleting metric {} from registry", metricName);
             Metrics.defaultRegistry().removeMetric(name);
             return true;
-        } catch (Exception ex) {
+        } catch (InvalidGaugeValueException e) {
+            LOGGER.info("Discard metric {} because of an invalid value.", metricName, e);
+            return true;
+        }
+        catch (Exception ex) {
             LOGGER.error("Caught an Exception while processing metric " + metricName, ex);
         }
         return false;
