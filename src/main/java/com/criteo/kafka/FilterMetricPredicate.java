@@ -78,7 +78,8 @@ class FilterMetricPredicate implements MetricPredicate {
     }
 
     /**
-     * Filter gauges that should have been deleted, ugly workaround for KAFKA-1866 with Kafka 0.8.x
+     * Filter gauges that should have been deleted, workaround for KAFKA-1866 with Kafka 0.8.x
+     * and for problems with Gauges which does not have numeric values.
      * @return {@code false} if gauge is not cleaned.
      */
     private boolean cleanInvalidGauge(MetricName name, Metric metric, String metricName) {
@@ -88,11 +89,10 @@ class FilterMetricPredicate implements MetricPredicate {
             LOGGER.info("Deleting metric {} from registry", metricName);
             Metrics.defaultRegistry().removeMetric(name);
             return true;
-        } catch (InvalidGaugeValueException e) {
-            LOGGER.info("Discard metric {} because of an invalid value.", metricName, e);
+        } catch (InvalidGaugeValueException ex) {
+            LOGGER.info("Discard metric {} because of an invalid value.", metricName, ex);
             return true;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             LOGGER.error("Caught an Exception while processing metric " + metricName, ex);
         }
         return false;

@@ -164,10 +164,10 @@ public class FilterMetricPredicateTest {
             }
         };
 
-        assertFalse( predicate.matches(metricName, nullStringGauge));
-        assertFalse( predicate.matches(metricName, stringGauge));
-        assertTrue( predicate.matches(metricName, intGauge));
-        assertTrue( predicate.matches(metricName, bigIntGauge));
+        assertFalse(predicate.matches(metricName, nullStringGauge));
+        assertFalse(predicate.matches(metricName, stringGauge));
+        assertTrue(predicate.matches(metricName, intGauge));
+        assertTrue(predicate.matches(metricName, bigIntGauge));
     }
 
     @Test
