@@ -77,12 +77,28 @@ public class FilterMetricPredicateTest {
     }
 
     @Test
+    public void alwaysExcludeClusterId_NoRegEx() {
+        MetricPredicate predicate = new FilterMetricPredicate();
+
+        assertFalse(predicate.matches(new MetricName("kafka.server", "KafkaServer", "ClusterId", null, "kafka.server:type=KafkaServer,name=ClusterId"), metricMock));
+        assertTrue(predicate.matches(new MetricName("kafka.common", "AppInfo", "SomethingElse", null, "kafka.common:type=AppInfo,name=Version"), metricMock));
+    }
+
+    @Test
     public void alwaysExcludeAppVersion_WithRegEx() {
         MetricPredicate predicate = new FilterMetricPredicate("group.type.foobar.*");
 
         assertFalse(predicate.matches(new MetricName("kafka.common", "AppInfo", "Version", null, "kafka.common:type=AppInfo,name=Version"), metricMock));
         assertTrue(predicate.matches(new MetricName("kafka.common", "AppInfo", "SomethingElse", null, "kafka.common:type=AppInfo,name=Version"), metricMock));
      }
+
+    @Test
+    public void alwaysExcludeClusterId_WithRegEx() {
+        MetricPredicate predicate = new FilterMetricPredicate("group.type.foobar.*");
+
+        assertFalse(predicate.matches(new MetricName("kafka.server", "KafkaServer", "ClusterId", null, "kafka.server:type=KafkaServer,name=ClusterId"), metricMock));
+        assertTrue(predicate.matches(new MetricName("kafka.server", "KafkaServer", "SomethingElse", null, "kafka.server:type=KafkaServer,name=ClusterId"), metricMock));
+    }
 
     @Test
     public void deleteGaugesIfTheyThrowNoSuchElementException() throws Exception {

@@ -31,7 +31,8 @@ import java.util.regex.Pattern;
 /**
  * Implementation of {@link MetricPredicate} which will <b>exclude<b/> metrics if they match
  * the given regular expression.<br>
- * It will also exclude the {@code kafka.common.AppInfo.Version} metric which causes warnings in graphite because of the invalid value.
+ * It will also exclude the {@code kafka.common.AppInfo.Version} and {@code kafka.server.KafkaServer.ClusterId} metrics
+ * which cause warnings in graphite because of the invalid values.
  * And it will exclude and remove all Gauges which are no longer available on the broker.
  */
 class FilterMetricPredicate implements MetricPredicate {
@@ -40,7 +41,7 @@ class FilterMetricPredicate implements MetricPredicate {
 
     private static final MetricProcessor metricProcessor = new ValidatingMetricProcessor();
 
-    private static final Pattern APPVERSION_PATTERN = Pattern.compile("kafka.common.AppInfo.Version");
+    private static final Pattern INVALID_METRIC_PATTERN = Pattern.compile("(kafka\\.common\\.AppInfo\\.Version|kafka\\.server\\.KafkaServer\\.ClusterId)");
 
     private final Pattern pattern;
 
@@ -64,9 +65,9 @@ class FilterMetricPredicate implements MetricPredicate {
     public boolean matches(MetricName name, Metric metric) {
         String metricName = sanitizeName(name);
 
-        boolean isVersionMetric = APPVERSION_PATTERN.matcher(metricName).matches();
+        boolean isInvalidKafkaMetric = INVALID_METRIC_PATTERN.matcher(metricName).matches();
 
-        if (isVersionMetric || cleanInvalidGauge(name, metric, metricName)) {
+        if (isInvalidKafkaMetric || cleanInvalidGauge(name, metric, metricName)) {
             return false;
         }
 
@@ -90,7 +91,7 @@ class FilterMetricPredicate implements MetricPredicate {
             Metrics.defaultRegistry().removeMetric(name);
             return true;
         } catch (InvalidGaugeValueException ex) {
-            LOGGER.info("Discard metric {} because of an invalid value.", metricName, ex);
+            LOGGER.info("Discard metric {} because of an invalid value. '{}'", metricName, ex.getMessage());
             return true;
         } catch (Exception ex) {
             LOGGER.error("Caught an Exception while processing metric " + metricName, ex);
