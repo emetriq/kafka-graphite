@@ -41,7 +41,7 @@ class FilterMetricPredicate implements MetricPredicate {
 
     private static final MetricProcessor metricProcessor = new ValidatingMetricProcessor();
 
-    private static final Pattern INVALID_METRIC_PATTERN = Pattern.compile("(kafka\\.common\\.AppInfo\\.Version|kafka\\.server\\.KafkaServer\\.ClusterId)");
+    private static final Pattern INVALID_METRIC_PATTERN = Pattern.compile("^(kafka\\.common\\.AppInfo\\.Version|kafka\\.server\\.KafkaServer\\.ClusterId)");
 
     private final Pattern pattern;
 
